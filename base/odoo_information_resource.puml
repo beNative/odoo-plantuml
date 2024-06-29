@@ -1,0 +1,408 @@
+@startuml
+set separator none
+
+!define comment(comment) <color:gray><i>Comment</i></color>
+!define custom(value) <color:red>value</color>
+!define computed(value) <color:green>value</color>
+!define related(value) <color:purple>value</color>
+!define descr(value) <color:gray><i>value</i></color>
+
+skinparam defaultFontName "Roboto"
+
+skinparam TitleFontName "Roboto"
+skinparam TitleFontSize 25
+
+skinparam FooterFontSize 10
+skinparam FooterFontName "Roboto"
+skinparam FooterFontColor "Red"
+
+skinparam ArrowFontName "Roboto"
+skinparam ArrowFontColor Grey
+
+skinparam ClassStereotypeFontColor Maroon
+skinparam ClassStereotypeFontStyle Bold, Italic
+skinparam ClassFontColor Blue
+skinparam ClassFontStyle Bold
+
+'skinparam SameClassWidth True
+
+' categories: security, orm, modules,server actions, views
+
+title Information Resource
+footer Odoo v17
+
+class ir.rule <<Record Rules>> {
+    +id: integer
+    --
+    +mode
+    +groups: char
+    +domain_force: char
+    +perm_read: boolean
+    +perm_write: boolean
+    +perm_create: boolean
+    +perm_unlink: boolean
+    --
+    +model_id: [[ir.model]]
+}
+
+class ir.property <<Properties>> << (M,#FFAAAA) >> {
+    +id: integer
+    --
+    +name: char
+    +type: char
+    +value_float: float
+    +value_integer: integer
+    +value_text: char
+    +value_binary: char
+    +value_reference: char
+    +value_datetime: datetime
+    --
+    +res_id: integer
+    +company_id: [[res.company]] descr(company_dependent param)
+    +fields_id: [[ir.model.fields]]
+}
+
+class ir.default <<Field Defaults>> {
+     +id: integer
+     --
+     +field_id: [[ir.model.fields]]
+     +user_id: [[res.users]]
+     +company_id: [[res.company]]
+     --
+     +condition: char
+     +json_value: char
+}
+
+class ir.model.data <<External Identifiers>> {
+    +id: integer
+    --
+    +res_id: integer
+    --
+    +name: char
+    +module: char
+    +model: char
+    +noupdate: boolean
+}
+
+class ir.model <<Models>>{
+    +id: integer
+    --
+    +name: char
+    +model: char
+    +order: char
+    +info: char
+    +transient: boolean
+    +is_mail_thread: boolean
+    +is_mail_activity: boolean
+    +is_mail_blacklist: boolean
+}
+
+class ir.model.fields <<Fields>> {
+    +id: integer
+    --
+    +model_id: [[ir.model]]
+    --
+    +name: char
+    +relation: char
+    +related: char
+    +relation_field: char
+    +relation_table: char
+    +field_description: char
+    +help: char
+    +ttype: char
+    --
+    +copied: boolean
+    +required: boolean
+    +readonly: boolean
+    +index: boolean
+    +translate: boolean
+    +selectable: boolean
+    +store: boolean
+    --
+    +size: integer
+    +tracking: integer
+    +on_delete:
+    (cascade, restrict, set null)
+}
+
+class ir.ui.view <<View>>{
+    +id: integer
+    --
+    +inherit_id: [[ir.ui.view]]
+    +website_id: [[website]]
+    --
+    +name: char
+    +model: char
+    +type: char
+    +priority: integer
+    +arch: computed
+    +arch_base: computed
+    +arch_prev: text
+    +arch_db: varchar
+    +arch_fs: varchar
+    +xml_id: computed
+    +mode: char
+}
+
+class ir.ui.menu <<Menu>>{
+    +id: integer
+    --
+    +parent_id: [[ir.ui.menu]]
+    --
+    +name: char
+    +active: boolean
+    +sequence: integer
+    +parent_path: char
+    +web_icon: char
+    +action: char
+}
+
+class ir.actions.actions<ir_actions> <<Actions>>{
+    +id: integer
+    --
+    +binding_model_id: [[ir.model]]
+    --
+    +name: char
+    +type: char
+    +binding_type: (action, report)
+    +binding_view_types:
+    +context: char
+    +usage: char
+}
+
+class ir.actions.act_window<ir_act_window> <<Window Actions>>{
+    +id: integer
+    --
+    +search_view_id: integer
+    +binding_model_id: integer
+    +view_id: integer
+    --
+    +name: char
+    +res_model: char
+    +view_mode: set(view_type)
+    +view_type: char
+    +target: (new, current, inline)
+    +domain: char
+    +context: char
+}
+
+class ir.actions.act_window.view<ir_act_window_view> <<Action Window View>>{
+    +id: integer
+    --
+    +view_id: [[ir.ui.view]]
+    +act_window_id: [[ir.actions.act_window]]
+    --
+    +name: char
+    +sequence: integer
+    +res_model: char
+    +view_mode: set([[view_type]])
+    +multi: boolean
+}
+
+class ir.actions.server<ir_act_server> <<Server Actions>>{
+    +id: integer
+    --
+    +template_id: [[mail.template]]
+    +activity_type_id: [[mail.activity.type]]
+    +activity_user_id: [[res.users]]
+    +activity_user_field_name: char
+    +code: text
+    +crud_model_id: [[ir.model]]
+    +groups_id: [[res.groups]]
+    +link_field_id: [[ir.model.fields]]
+    --
+    +sequence: integer
+    +usage:
+    (ir_actions_server, ir_cron)
+    +state:
+    (code, object_create, object_write,
+    multi, email, followers, next_activity)
+    --
+    *partner_ids
+    *child_ids
+    *fields_lines
+}
+
+class ir.server.object.lines {
+    +id: integer
+    --
+    +server_id: [[ir.actions.server]]
+    +evaluation_type:
+    (value,reference,equation)
+}
+
+class ir.actions.report<ir_act_report_xml> <<Report Actions>>{
+    +id: integer
+    --
+}
+
+class ir.actions.client <<Client Actions>>{
+    +id: integer
+    --
+}
+
+class ir.actions.act_url <<URL Actions>>{
+    +id: integer
+}
+
+class ir.cron <<Automated Actions>>{
+    +id: integer
+    --
+    +cron_name: char
+    +active: boolean
+    +interval_number: integer
+    +interval_type:
+    (minutes, hours, days, weeks, months)
+    +numbercall: integer
+    +nextcall: datetime
+    +lastcall: datetime
+    +priority: integer
+    --
+    +ir_actions_server_id: [[ir.actions.server]]
+    +user_id: [[res.users]]
+}
+
+class ir.module.module{
+    +id: integer
+    --
+    +category_id: [[ir.module.category]]
+    --
+    +website: char
+    +state: char
+    +latest_version: char
+    +shortdesc: char
+    +description: text
+    +license: char
+    +sequence: integer
+    +application: boolean
+    +demo: boolean
+    +web: boolean
+    +auto_install: boolean
+    +to_buy: boolean
+    +maintainer: char
+    +contributors: text
+    +url: char
+    +published_version: char
+    +menus_by_module: text
+    +reports_by_module: text
+    +views_by_module: text
+    +imported: boolean
+}
+
+class ir.module.category{
+    +id: integer
+    --
+    +name: char
+    +description: text
+    +sequence: integer
+    +visible: boolean
+    +exclusive: boolean
+}
+
+class ir.module.dependency{
+    +id: integer
+    --
+    +module_id: [[ir.module.module]]
+    --
+    +name: char
+    +auto_install_required: boolean
+}
+
+class ir.module.exclusion{
+    +id: integer
+    --
+    +name: char
+    +module_id: integer
+}
+
+class ir.attachment{
+    +id: integer
+    --
+    +name: char
+    +res_model: char
+    +res_field: char
+    +res_id: integer
+    --
+    +type: char
+    +store_fname: char
+    +file_size: integer
+    +mimetype: char
+}
+
+class res.company <<Companies>>{
+    +id: integer
+    --
+}
+
+class res.users <<System Users>>{
+     +id: integer
+     --
+}
+
+enum view_type {
+  qweb
+  tree
+  form
+  kanban
+  graph
+  calendar
+  pivot
+  search
+}
+
+enum action_type {
+  window
+  report
+  server
+}
+
+ir.model.data o-- ir.model: model
+
+ir.default o-- ir.model.fields: field_id
+ir.default o-- res.company: company_id
+ir.default o-- res.users: user_id
+
+ir.ui.view o-- ir.actions.actions
+ir.ui.view o-- ir.ui.view: inherit_id
+ir.ui.view o-- ir.model: model
+ir.ui.view o-- view_type: view_type
+
+ir.ui.menu o-- ir.ui.menu: parent_id
+ir.ui.menu o-- ir.actions.act_window: action
+
+ir.actions.act_window o-- ir.model: binding_model_id
+ir.actions.act_window o-- ir.ui.view: view_id
+ir.actions.act_window o-- ir.ui.view: search_view_id
+ir.actions.act_window o-- ir.model: res_model
+ir.actions.act_window o-- view_type: view_type
+ir.actions.act_window }--{ view_type: view_mode
+
+ir.model.fields o-- ir.model: model_id
+
+ir.actions.actions <|-- ir.actions.act_window: binding_type = window
+ir.actions.actions <|-- ir.actions.report: binding_type = report
+ir.actions.actions <|-- ir.actions.server: binding_type = server
+ir.actions.actions <|-- ir.actions.client
+ir.actions.actions <|-- ir.actions.act_url
+ir.actions.actions }--{ view_type: binding_view_types
+ir.actions.actions o-- action_type: type
+ir.actions.actions o-- ir.model: binding_model_id
+
+ir.actions.act_window.view o-- ir.actions.act_window: act_window_id
+ir.actions.act_window.view o-- ir.ui.view: view_id
+
+ir.rule o-- ir.model: model_id
+
+ir.property o-- ir.model.fields: fields_id
+ir.property o-- res.company: company_id
+
+ir.cron o-- ir.actions.server: ir_actions_server_id
+ir.cron o-- res.users: user_id
+
+ir.module.module o-- ir.module.category: category_id
+ir.module.dependency o-- ir.module.module: module_id
+ir.module.exclusion o-- ir.module.module: module_id
+
+ir.server.object.lines o-- ir.actions.server: server_id
+
+@enduml
