@@ -204,9 +204,9 @@ class product.pricelist{
 class product.pricelist.item{
     +id: integer
     --
-    +product_tmpl_id: [[product.template]]]
+    +product_tmpl_id: [[product.template]]
     +product_id: [[product.product]]
-    +categ_id: [[product.category]]]
+    +categ_id: [[product.category]]
     +base_pricelist_id: [[product.pricelist]]
     +pricelist_id: [[product.pricelist]]
     +company_id: [[res.company]]
@@ -271,7 +271,7 @@ class res.company{
 }
 
 product.category o-- product.category: parent_id
-product.category o-- product.category: child_idna
+product.category o-- product.category: child_id
 
 product.product o-- product.template: product_tmpl_id
 product.product o-- product.category: categ_id
@@ -299,6 +299,7 @@ product.pricelist o-- res.company: company_id
 product.pricelist.item o-- product.pricelist: pricelist_id/base_pricelist_id
 product.pricelist.item o-- product.template: product_tmpl_id
 product.pricelist.item o-- product.product: product_id
+product.pricelist.item o-- product.category: categ_id
 product.pricelist.item o-- res.company: company_id
 product.pricelist.item o-- res.currency: currency_id
 
