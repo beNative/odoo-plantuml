@@ -1,0 +1,218 @@
+@startuml
+
+set separator none
+
+!define custom(value) <color:red>value</color>
+!define computed(value) <color:green>value</color>
+!define related(value) <color:purple>value</color>
+!define descr(value) <color:gray><i>value</i></color>
+
+skinparam defaultFontName "Roboto"
+
+skinparam TitleFontName "Roboto"
+skinparam TitleFontSize 25
+
+skinparam FooterFontSize 10
+
+skinparam ArrowFontName "Roboto"
+skinparam ArrowFontColor Grey
+
+skinparam SameClassWidth True
+
+skinparam ClassFontColor Blue
+skinparam ClassFontStyle Bold
+skinparam ClassStereotypeFontColor Maroon
+skinparam ClassStereotypeFontStyle Bold, Italic
+
+title Manufacturing Resource Planning (MRP)
+footer Odoo v17
+
+class mrp.production <<Manufacturing Order>> {
+    +id: integer
+    --
+    +product_id: [[product.product]]
+    +bom_id: [[mrp.bom]]
+    +routing_id: [[mrp.routing]]
+    +lot_producting_id: [[stock.lot]]
+    +location_src_id: [[stock.location]]
+    +location_dest_id: [[stock.location]]
+    --
+    +product_qty: float
+    +state: (draft, confirmed, progress, to_close, done, cancel)
+    +reservation_state: (confirmed, assigned, waiting)
+    +date_planned_start: datetime
+    +date_planned_finished: datetime
+    --
+    *move_raw_ids: [[stock.move]] descr(components)
+    *move_finished_ids: [[stock.move]] descr(finished products)
+    *move_byproduct_ids: [[stock.move]] descr(finished by-products)
+    *move_dest_ids: [[stock.move]]
+    *scrap_ids: [[stock.scrap]]
+    *workorder_ids: [[mrp.workorder]]
+}
+
+class mrp.bom <<Bill of Materials>> {
+    +id: integer
+    --
+    +picking_type_id: [[stock.picking_type]]
+    +product_tmpl_id: [[product.template]]
+    +product_id: [[product.product]]
+    --
+    +product_qty: float
+    +sequence: integer
+    --
+    *bom_line_ids: [[mrp.bom.line]]
+    *byproduct_ids: [[mrp.bom.byproduct]]
+    *operation_ids: [[mrp.routing.workcenter]]
+}
+
+class mrp.bom.line <<Bill of Materials Line>> {
+    +id: integer
+    --
+    +bom_id: [[mrp.bom]]
+    +product_id: [[product.product]]
+    +operation_id: [[mrp.routing.workcenter]]
+    --
+    +sequence: integer
+    +product_qty: float
+}
+
+class mrp.routing <<Routing>> {
+    +id: integer
+    --
+    +name: char
+    --
+    *workcenter_lines: [[mrp.routing.workcenter]]
+}
+
+class mrp.routing.workcenter <<Workcenter Usage>> {
+    +id: integer
+    --
+    +workcenter_id: [[mrp.workcenter]]
+    --
+    +name: char
+    +sequence: integer
+    +time_cycle: float
+}
+
+class mrp.workcenter <<Workcenter>> {
+    +id: integer
+    --
+    +name: char
+}
+
+class mrp.bom.byproduct <<By-product>> {
+    +id: integer
+    --
+    +product_id: [[product.product]]
+    +bom_id: [[mrp.bom]]
+    --
+    +product_qty: float
+}
+
+class mrp.workorder <<Work Order>> {
+    +id: integer
+    --
+    +production_id: [[mrp.production]]
+    +production_bom_id: [[mrp.bom]]
+    +product_id: [[product.product]]
+    +workcenter_id: [[mrp.workcenter]]
+    +operation_id: [[mrp.routing.workcenter]]
+    --
+    +name: char
+    +working_state: ()
+    +date_planned_start: datetime
+    +date_planned_finished: datetime
+    +state: char
+}
+
+class stock.move {
+    +id: integer
+    --
+    +picking_id: [[stock.picking]]
+    +rule_id: [[stock.rule]]
+    +scrap_id: [[stock.scrap]]
+    +orderpoint_id: [[stock.warehouse.orderpoint]]
+    +bom_line_id: [[mrp.bom.line]]
+    +product_id: [[product.product]]
+    +byproduct_id: [[mrp.bom.byproduct]]
+    +operation_id: [[mrp.routing.workcenter]]
+    +workorder_id: [[mrp.workorder]]
+    --
+    +name: char
+    +sequence: integer
+}
+
+class stock.move.line {
+    +id: integer
+    --
+    +picking_id: [[stock.picking]]
+    +product_id: [[product.product]]
+    +lot_id: [[stock.lot]]
+    +move_id: [[stock.move]]
+}
+
+class stock.picking {
+    +id: integer
+    --
+    +product_id: [[product.product]]
+    +lot_id: [[stock.lot]]
+    +picking_type_id: [[stock.picking.type]]
+    --
+    +name: char
+    --
+    *move_line_ids: [[stock.move.line]]
+}
+
+class stock.warehouse.orderpoint <<Minimum Inventory Rule>>{
+    +id: integer
+    --
+    +product_id: [[product.product]]
+    +warehouse_id: [[stock.warehouse]]
+    +location_id: [[stock.location]]
+    +route_id: [[stock.route]]
+    +bom_id: [[mrp.bom]]
+    --
+    *rule_ids: [[stock.rule]]
+}
+
+class stock.lot <<Lots>> {
+    +id: integer
+    --
+    +product_id: [[product.product]]
+    +location_id: [[stock.location]]
+    --
+    +name: char
+    +ref: char
+}
+
+mrp.production o-- mrp.bom : bom_id
+mrp.production o-- mrp.routing : routing_id
+
+mrp.bom.line o-- mrp.routing.workcenter : operation_id
+mrp.bom.line o-- mrp.bom : bom_id
+
+mrp.routing o-- mrp.routing.workcenter : workcenter_lines
+
+mrp.routing.workcenter o-- mrp.workcenter : workcenter_id
+
+mrp.bom.byproduct o-- mrp.bom: bom_id
+
+mrp.workorder o-- mrp.workcenter : workcenter_id
+mrp.workorder o-- mrp.bom : production_bom_id
+mrp.workorder o-- stock.lot
+mrp.workorder o-- mrp.production : production_id
+mrp.workorder o-- mrp.routing.workcenter : operation_id
+
+mrp.production o-- stock.lot : lot_producting_id
+
+stock.move o-- stock.warehouse.orderpoint: orderpoint_id
+stock.move o-- mrp.workorder: workorder_id
+
+stock.move.line o-- stock.move : move_id
+stock.move.line o-- stock.lot : lot_id
+stock.move.line o-- stock.picking : picking_id
+
+stock.warehouse.orderpoint o-- mrp.bom : bom_id
+
+@enduml
