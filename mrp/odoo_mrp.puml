@@ -2,6 +2,7 @@
 
 set separator none
 
+!define comment(comment) <color:gray><i>Comment</i></color>
 !define custom(value) <color:red>value</color>
 !define computed(value) <color:green>value</color>
 !define related(value) <color:purple>value</color>
@@ -13,16 +14,16 @@ skinparam TitleFontName "Roboto"
 skinparam TitleFontSize 25
 
 skinparam FooterFontSize 10
+skinparam FooterFontName "Roboto"
+skinparam FooterFontColor "Red"
 
 skinparam ArrowFontName "Roboto"
 skinparam ArrowFontColor Grey
 
-skinparam SameClassWidth True
-
-skinparam ClassFontColor Blue
-skinparam ClassFontStyle Bold
 skinparam ClassStereotypeFontColor Maroon
 skinparam ClassStereotypeFontStyle Bold, Italic
+skinparam ClassFontColor Blue
+skinparam ClassFontStyle Bold
 
 title Manufacturing Resource Planning (MRP)
 footer Odoo v17
