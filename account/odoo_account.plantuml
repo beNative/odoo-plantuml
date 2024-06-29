@@ -1,0 +1,282 @@
+@startuml
+set separator none
+'hide members
+
+!define custom(value) <color:red>value</color>
+!define computed(value) <color:green>value</color>
+!define related(value) <color:purple>value</color>
+!define descr(value) <color:gray><i>value</i></color>
+
+' DIAGRAM DISPLAY OPTIONS
+skinparam defaultFontName "Roboto"
+skinparam TitleFontName "Roboto"
+skinparam TitleFontSize 25
+skinparam ArrowFontName "Roboto"
+skinparam ArrowFontColor Gray
+'skinparam SameClassWidth True
+skinparam ClassStereotypeFontColor Maroon
+skinparam ClassStereotypeFontStyle Bold, Italic
+skinparam ClassFontColor Blue
+skinparam ClassFontStyle Bold
+
+skinparam TitleFontName "Arial"
+skinparam TitleFontSize 25
+
+title Accounting
+
+class account.analytic.account <<Analytic Account>>{
+    +id: integer
+    --
+    +plan_id: [[account.analytic.plan]]
+    +root_plan_id: [[account.analytic.plan]]
+    +company_id: [[res.company]]
+    +partner_id: [[res.partner]]
+    +currency_id: [[res.currency]]
+    --
+    +name: char
+    +code: char
+    +balance: monetary
+    +debit: monetary
+    +credit: monetary
+    --
+    *line_ids: [[account.analytic.line]]
+}
+
+class account.analytic.line <<Analytic Lines>>{
+    +id: integer
+    --
+    +account_id: [[account.analytic.account]]
+    +computed(auto_account_id: [[account.analytic.account]])
+    +company_id: [[res.company]]
+    +move_line_id: [[account.move.line]]
+    +computed(partner_id: [[res.partner]])
+    +user_id: [[res.users]]
+    +product_id: [[product.product]]
+    +computed(general_account_id: [[account.account]])
+    +product_uom_id: [[uom.uom]]
+    --
+    +amount: monetary
+    +unit_amount: float
+    +code: char
+    +ref: char
+    +category: (other, invoice, vendor_bill)
+}
+
+class account.analytic.plan <<Analytic Plan>>{
+    +id: integer
+    --
+    +parent_id: [[account.analytic.plan]]
+    +root_id: [[account.analytic.plan]]
+    --
+    +name: char
+    +code: char
+    +color: integer
+    +sequence: integer
+    +default_applicability: (optional, mandatory, unavailable)
+    --
+    *account_ids: [[account.analytic.account]]
+    *applicability_ids: [[account.analytic.applicability]]
+}
+
+class account.analytic.applicability <<Analytic Applicability>>{
+    +id: integer
+    --
+    +analytic_plan_id: [[account.analytic.plan]]
+    +account_id: [[account.analytic.account]]
+    +company_id: [[res.company]]
+    +product_categ_id: [[product.category]]
+    --
+    +sequence: integer
+    +applicability: (optional, mandatory, unavailable)
+    +business_domain: (general, invoice, bill)
+    +account_prefix: char
+}
+
+class account.analytic.distribution.model <<Analytic Distribution Model>>{
+    +id: integer
+    --
+    +name: char
+    +code: char
+    --
+    +partner_id: [[res.partner]]
+    +partner_category_id: [[res.partner.category]]
+    +company_id: [[res.company]]
+    +product_id: [[product.product]]
+    +product_categ_id: [[product.category]]
+    --
+    +analytic_distribution: char
+}
+
+class account.move <<Move>>{
+    +id: integer
+    --
+    +journal_id: [[account.journal]]
+    +company_id: [[res.company]]
+}
+
+class account.move.line <<Move Line>>{
+    +id: integer
+    --
+    +account_id: [[account.account]]
+    +move_id: [[account.move]]
+}
+
+class account.journal <<Journal>>{
+    +id: integer
+    --
+    +currency_id: [[res.currency]]
+    +company_id: [[res.company]]
+    +default_credit_account_id: [[account.account]]
+    +default_debit_account_id: [[account.account]]
+    +profit_account_id: [[account.account]]
+    +loss_account_id:  [[account.account]]
+    +sequence_id: [[ir.sequence]]]
+    +refund_sequence_id: [[ir.sequence]]
+    --
+    +type:(sale, purchase, cash, bank, general)
+    +sequence: integer
+    +refund_sequence: bool
+    +invoice_reference_type: (none, partner, invoice)
+    +invoice_reference_model: (odoo, euro)
+    --
+    *type_control_ids: [[account.account.type]]
+    *journal_group_ids: [[account.journal.group]]
+}
+
+class account.journal.group <<Account Journal Group>>{
+   +id: integer
+   --
+   +company_id: [[res.company]]
+   --
+   +name: char
+   +sequence: integer
+   --
+   *excluded_journal_ids: many [[account.journal]]
+}
+
+class account.account.type {
+    +id: integer
+    --
+    +type: (other, receivable, payable, liquidity)
+    +internal_group: (equity, asset, liability, income, expense, off_balance)
+    +note:char
+}
+
+class account.account <<Account>>{
+    +id: integer
+    --
+    +currency_id: [[res.currency]]
+    +company_id: [[res.company]]
+    +group_id: [[account.group]]
+    +user_type_id: [[account.account.type]]
+    --
+    +code: char
+    +name: char
+    +deprecated: bool
+    +used: bool
+    +reconcile: bool
+    +computed(opening_debit: monetary)
+    +computed(opening_credit: monetary)
+    --
+    tax_ids: [[account.tax]]
+    tag_ids: [[account.account.tag]]
+}
+
+class account.group <<Account Group>>{
+    +id: integer
+    --
+    +parent_id: [[account.group]]
+    --
+    +name: char
+    +code_prefix: char
+}
+
+class account.root {
+    +id: integer
+    --
+    +parent_id: [[account.root]]
+    +company_id: [[res.company]]
+    --
+    +name: char
+}
+
+class account.account.tag <<Account Tag>>{
+    +id: integer
+    --
+    +country_id: [[res.country]]
+    --
+    +name: char
+    +applicability: (accounts, taxes, products)
+    +color: integer
+    +tax_negate: bool
+}
+
+class account.move.line <<Journal Item>>{
+    +id: integer
+    --
+    +balance: monetary
+    +name: char
+    --
+    +move_id: [[account.move]]
+    +account_id: [[account.account]]
+}
+
+class account.move <<Journal Entry>>{
+    +id: integer
+    --
+    +task_id: integer
+    +journal_id: [[account.journal]]
+    +account_id: [[account.account]]
+    +analytic_account_id: [[account.analytic.account]]
+    +company_id: [[res.company]]
+    +date: date
+    +state: (draft, posted, cancel)
+    +payment_state: (not_paid, in_payment, paid, partial, reversed, invoicing_legacy)
+}
+
+class res.company <<Company>>{
+    +id: integer
+}
+
+class res.currency <<Currency>>{
+    +id: integer
+}
+
+account.account o-- account.group: group_id
+account.account o-- res.currency: currency_id
+account.account o-- res.company: company_id
+account.account o--o account.account.tag: tag_ids
+
+account.group o-- account.group: parent_id
+
+account.root o-- account.root: parent_id
+account.root o-- res.company: company_id
+
+account.analytic.account o-- account.analytic.plan: plan_id
+account.analytic.account o-- res.company: company_id
+
+account.analytic.line o-- account.analytic.account: account_id
+account.analytic.line o-- res.company: company_id
+account.analytic.line o-- account.move.line: move_line_id
+account.analytic.line o-- account.journal: journal_id
+account.analytic.line o-- account.account: general_account_id
+
+account.analytic.plan o-- account.analytic.plan: parent_id, root_id
+
+account.analytic.applicability o-- account.analytic.plan: plan_id
+
+account.journal o-- account.account: default_account_id
+account.journal o--o account.account.type: type_control_ids
+account.journal o--o account.account: account_control_ids
+account.journal o--o account.journal.group: journal_group_ids
+
+
+account.journal.group o--o account.journal: excluded_journal_ids
+
+account.move o-- account.journal: journal_id
+account.move o-- account.account: account_id
+account.move o-- account.analytic.account:analytic_account_id
+
+account.move.line o-- account.move: move_id
+
+@enduml
