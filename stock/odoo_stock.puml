@@ -1,0 +1,133 @@
+@startuml
+set separator none
+
+!define comment(comment) <color:gray><i>Comment</i></color>
+!define custom(value) <color:red>value</color>
+!define computed(value) <color:green>value</color>
+!define related(value) <color:purple>value</color>
+!define descr(value) <color:gray><i>value</i></color>
+
+skinparam defaultFontName "Roboto"
+
+skinparam TitleFontName "Roboto"
+skinparam TitleFontSize 25
+
+skinparam FooterFontSize 10
+skinparam FooterFontName "Roboto"
+skinparam FooterFontColor "Red"
+
+skinparam ArrowFontName "Roboto"
+skinparam ArrowFontColor Grey
+
+skinparam ClassStereotypeFontColor Maroon
+skinparam ClassStereotypeFontStyle Bold, Italic
+skinparam ClassFontColor Blue
+skinparam ClassFontStyle Bold
+
+title Stock Management
+footer Odoo v17
+
+class stock.picking <<Stock Picking>> {
+    +id: integer
+    --
+    +name: char
+    +origin: char
+    +state: (draft, waiting, confirmed, assigned, done, cancel)
+    +date: datetime
+    +date_done: datetime
+    +priority: integer
+    --
+    *move_lines: [[stock.move]]
+    *location_id: [[stock.location]]
+    *location_dest_id: [[stock.location]]
+    *picking_type_id: [[stock.picking.type]]
+    *company_id: [[res.company]]
+}
+
+class stock.move <<Stock Move>> {
+    +id: integer
+    --
+    +name: char
+    +origin: char
+    +state: (draft, waiting, confirmed, assigned, done, cancel)
+    +product_id: [[product.product]]
+    +product_uom_qty: float
+    +quantity_done: float
+    +reserved_availability: float
+    +date: datetime
+    +date_expected: datetime
+    --
+    *location_id: [[stock.location]]
+    *location_dest_id: [[stock.location]]
+    *picking_id: [[stock.picking]]
+    *company_id: [[res.company]]
+}
+
+class stock.location <<Stock Location>> {
+    +id: integer
+    --
+    +name: char
+    +complete_name: char
+    +usage: (supplier, view, internal, customer, inventory, production, transit)
+    +active: boolean
+    +scrap_location: boolean
+    +return_location: boolean
+    --
+    *company_id: [[res.company]]
+}
+
+class stock.picking.type <<Picking Type>> {
+    +id: integer
+    --
+    +name: char
+    +code: (incoming, outgoing, internal)
+    +sequence: integer
+    +default_location_src_id: [[stock.location]]
+    +default_location_dest_id: [[stock.location]]
+    --
+    *warehouse_id: [[stock.warehouse]]
+    *company_id: [[res.company]]
+}
+
+class stock.warehouse <<Warehouse>> {
+    +id: integer
+    --
+    +name: char
+    +code: char
+    +reception_steps: char
+    +delivery_steps: char
+    +company_id: [[res.company]]
+}
+
+class product.product {
+    +id: integer
+    --
+}
+
+class res.company {
+    +id: integer
+    --
+}
+
+stock.picking o-- stock.location: location_id
+stock.picking o-- stock.location: location_dest_id
+stock.picking o-- stock.picking.type: picking_type_id
+stock.picking o-- res.company: company_id
+stock.picking *-- stock.move: move_lines
+
+stock.move o-- stock.location: location_id
+stock.move o-- stock.location: location_dest_id
+stock.move o-- stock.picking: picking_id
+stock.move o-- product.product: product_id
+stock.move o-- res.company: company_id
+
+stock.location o-- res.company: company_id
+
+stock.picking.type o-- stock.location: default_location_src_id
+stock.picking.type o-- stock.location: default_location_dest_id
+stock.picking.type o-- stock.warehouse: warehouse_id
+stock.picking.type o-- res.company: company_id
+
+stock.warehouse o-- res.company: company_id
+
+@enduml
