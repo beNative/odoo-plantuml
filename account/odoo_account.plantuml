@@ -1,19 +1,16 @@
 @startuml
 set separator none
-'hide members
 
 !define custom(value) <color:red>value</color>
 !define computed(value) <color:green>value</color>
 !define related(value) <color:purple>value</color>
 !define descr(value) <color:gray><i>value</i></color>
 
-' DIAGRAM DISPLAY OPTIONS
 skinparam defaultFontName "Roboto"
 skinparam TitleFontName "Roboto"
 skinparam TitleFontSize 25
 skinparam ArrowFontName "Roboto"
 skinparam ArrowFontColor Gray
-'skinparam SameClassWidth True
 skinparam ClassStereotypeFontColor Maroon
 skinparam ClassStereotypeFontStyle Bold, Italic
 skinparam ClassFontColor Blue
@@ -114,11 +111,14 @@ class account.move <<Move>>{
     +company_id: [[res.company]]
 }
 
-class account.move.line <<Move Line>>{
+class account.move.line <<Journal Item>>{
     +id: integer
     --
-    +account_id: [[account.account]]
+    +balance: monetary
+    +name: char
+    --
     +move_id: [[account.move]]
+    +account_id: [[account.account]]
 }
 
 class account.journal <<Journal>>{
@@ -130,7 +130,7 @@ class account.journal <<Journal>>{
     +default_debit_account_id: [[account.account]]
     +profit_account_id: [[account.account]]
     +loss_account_id:  [[account.account]]
-    +sequence_id: [[ir.sequence]]]
+    +sequence_id: [[ir.sequence]]
     +refund_sequence_id: [[ir.sequence]]
     --
     +type:(sale, purchase, cash, bank, general)
@@ -211,16 +211,6 @@ class account.account.tag <<Account Tag>>{
     +tax_negate: bool
 }
 
-class account.move.line <<Journal Item>>{
-    +id: integer
-    --
-    +balance: monetary
-    +name: char
-    --
-    +move_id: [[account.move]]
-    +account_id: [[account.account]]
-}
-
 class account.move <<Journal Entry>>{
     +id: integer
     --
@@ -265,11 +255,10 @@ account.analytic.plan o-- account.analytic.plan: parent_id, root_id
 
 account.analytic.applicability o-- account.analytic.plan: plan_id
 
-account.journal o-- account.account: default_account_id
+account.journal o-- account.account: default_credit_account_id
 account.journal o--o account.account.type: type_control_ids
 account.journal o--o account.account: account_control_ids
 account.journal o--o account.journal.group: journal_group_ids
-
 
 account.journal.group o--o account.journal: excluded_journal_ids
 
