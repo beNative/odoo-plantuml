@@ -1,0 +1,122 @@
+@startuml
+
+set separator none
+'hide members
+'hide namespace creation
+
+skinparam defaultFontName "Roboto"
+
+skinparam TitleFontName "Roboto"
+skinparam TitleFontSize 25
+
+skinparam FooterFontSize 10
+
+skinparam ArrowFontName "Roboto"
+skinparam ArrowFontColor Grey
+
+skinparam SameClassWidth True
+
+skinparam ClassFontColor Blue
+skinparam ClassFontStyle Bold
+skinparam ClassStereotypeFontColor Maroon
+skinparam ClassStereotypeFontStyle Bold, Italic
+
+title Access Control
+footer Odoo v17
+
+class res.users <<Users>>{
+    +id: integer
+    --
+    +partner_id: [[res.partner]]
+}
+
+class res.partner <<Contacts>>{
+    +id: integer
+}
+
+class res.groups <<Groups>>{
+    +id: integer
+    --
+    +category_id: [[ir.module.category]]
+    --
+    name: char
+    comment: text
+    --
+    +users: [[res.users]]]
+    +model_access: [[ir.model.access]]
+    +rule_groups: [[ir.rule]]
+    +menu_access: [[ir.ui.menu]]
+    +view_access: [[ir.ui.view]]
+    --
+    *implied_ids
+}
+
+class ir.model.access <<Access Rights>>{
+    +id: integer
+    --
+    +model_id: [[ir.model]]
+    +group_id: [[res.groups]]
+    --
+    +perm_create: boolean
+    +perm_unlink: boolean
+    +perm_write: boolean
+    +perm_read: boolean
+}
+
+class ir.rule <<Record Rules>> {
+    +id: integer
+    --
+    +name: char
+    'predicate (domain expression)
+    +domain_force: text
+    +perm_read: boolean
+    +perm_write: boolean
+    +perm_create: boolean
+    +perm_unlink: boolean
+    --
+    +model_id: [[ir.model]]
+    +groups: [[res.groups]]
+}
+
+class ir.model <<Model>>{
+    +id: integer
+    --
+    +name: char
+    +model: char
+    +info: char
+    +transient: boolean
+}
+
+class ir.module.category <<Module Category>>{
+    +id: integer
+    --
+}
+
+class ir.ui.menu <<Menus>>{
+    +id: integer
+    --
+}
+
+class ir.ui.view <<Views>>{
+    +id: integer
+    --
+}
+
+class res.company <<Company>>{
+    +id: integer
+    --
+    name: char
+}
+
+ir.model.access o-- ir.model : model_id
+ir.model.access o-- res.groups : group_id
+res.groups o-- ir.module.category: category_id
+res.groups o--o ir.model.access: model_access
+res.groups o--o ir.rule: rule_groups
+res.groups o--o ir.ui.menu: menu_access
+res.groups o--o ir.ui.view: view_access
+res.users o-- res.partner : partner_id
+ir.rule o--o res.groups: groups
+ir.rule o-- ir.model : model_id
+
+@enduml
