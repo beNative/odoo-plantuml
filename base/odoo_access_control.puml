@@ -42,7 +42,7 @@ class res.groups <<Groups>>{
     name: char
     comment: text
     --
-    +users: [[res.users]]]
+    +users: [[res.users]]
     +model_access: [[ir.model.access]]
     +rule_groups: [[ir.rule]]
     +menu_access: [[ir.ui.menu]]
